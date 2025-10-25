@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>보험 전화 청약 시스템</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>보험 전화 청약 시스템</h1>
+      <p>통화 녹음 및 청약 프로세스 자동 검증 시스템</p>
+    </header>
+
+    <main>
+      <!-- 녹음 및 업로드 섹션 -->
+      <section class="card">
+        <h2>1. 통화 녹음 및 업로드</h2>
+
+        <!-- 녹음 기능 -->
+        <div class="recording-section">
+          <h3>브라우저 녹음</h3>
+          <div class="controls">
+            <button id="startRecording" class="btn btn-primary">녹음 시작</button>
+            <button id="stopRecording" class="btn btn-danger" disabled>녹음 중지</button>
+            <button id="playRecording" class="btn btn-secondary" disabled>재생</button>
+          </div>
+          <div class="status" id="recordingStatus"></div>
+          <audio id="audioPlayback" controls style="display: none; width: 100%; margin-top: 10px;"></audio>
+        </div>
+
+        <div class="divider">또는</div>
+
+        <!-- 파일 업로드 -->
+        <div class="upload-section">
+          <h3>녹음 파일 업로드</h3>
+          <input type="file" id="audioFile" accept="audio/*" class="file-input">
+          <button id="uploadFile" class="btn btn-primary">파일 업로드</button>
+        </div>
+
+        <div class="divider">자동 처리</div>
+
+        <!-- 자동 처리 버튼 -->
+        <div class="process-section">
+          <button id="processAuto" class="btn btn-success btn-large" disabled>
+            자동 처리 (STT → 검증 → 이메일)
+          </button>
+          <p class="help-text">녹음하거나 파일을 선택한 후 이 버튼을 클릭하면 모든 프로세스가 자동으로 실행됩니다.</p>
+        </div>
+      </section>
+
+      <!-- 진행 상황 -->
+      <section class="card" id="progressSection" style="display: none;">
+        <h2>처리 진행 상황</h2>
+        <div id="progressLog"></div>
+      </section>
+
+      <!-- 결과 표시 -->
+      <section class="card" id="resultSection" style="display: none;">
+        <h2>검증 결과</h2>
+        <div id="resultContent"></div>
+      </section>
+
+      <!-- 통화 목록 -->
+      <section class="card">
+        <h2>통화 기록</h2>
+        <button id="refreshList" class="btn btn-secondary">목록 새로고침</button>
+        <div id="callsList"></div>
+      </section>
+    </main>
+  </div>
+
+  <script src="js/recorder.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
