@@ -1,0 +1,37 @@
+name: Auto Post to Raonlog Blog
+
+on:
+  schedule:
+    # 매주 월요일 오전 9시 KST (UTC 00:00)
+    - cron: '0 0 * * 1'
+  workflow_dispatch:
+    inputs:
+      topic:
+        description: '블로그 포스트 주제 (비워두면 Claude가 자동 선택)'
+        required: false
+        default: ''
+
+jobs:
+  post-blog:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install anthropic requests
+
+      - name: Generate and post blog content
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          WP_USERNAME: ${{ secrets.WP_USERNAME }}
+          WP_APP_PASSWORD: ${{ secrets.WP_APP_PASSWORD }}
+          WP_DOMAIN: raonlog.com
+          BLOG_TOPIC: ${{ github.event.inputs.topic }}
+        run: python scripts/generate_and_post.py
