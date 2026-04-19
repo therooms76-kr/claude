@@ -32,6 +32,6 @@ jobs:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           WP_USERNAME: ${{ secrets.WP_USERNAME }}
           WP_APP_PASSWORD: ${{ secrets.WP_APP_PASSWORD }}
-          WP_DOMAIN: raonlog.com
+          WP_DOMAIN: www.raonlog.com
           BLOG_TOPIC: ${{ github.event.inputs.topic }}
         run: python scripts/generate_and_post.py
