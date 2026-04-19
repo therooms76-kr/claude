@@ -76,6 +76,8 @@ def post_to_wordpress(title, content):
     }
 
     response = requests.post(wp_url, headers=headers, json=payload, timeout=30)
+    print(f"  HTTP 상태코드: {response.status_code}")
+    print(f"  응답 본문: {response.text[:500]}")
     response.raise_for_status()
     result = response.json()
 
