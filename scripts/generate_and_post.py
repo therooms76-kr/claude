@@ -7,6 +7,10 @@ import anthropic
 import requests
 
 
+def log(msg):
+    print(msg, flush=True)
+
+
 def generate_blog_post(topic=None):
     client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
 
@@ -35,7 +39,6 @@ def generate_blog_post(topic=None):
 
     text = response.content[0].text.strip()
 
-    # JSON 블록 추출 (코드 펜스 처리)
     if "```json" in text:
         text = text.split("```json")[1].split("```")[0].strip()
     elif "```" in text:
@@ -45,55 +48,74 @@ def generate_blog_post(topic=None):
         data = json.loads(text)
         return data["title"], data["content"]
     except json.JSONDecodeError as e:
-        print(f"⚠️  JSON 파싱 실패: {e}", file=sys.stderr)
-        print(f"원본 응답:\n{text}", file=sys.stderr)
-        # 폴백: 첫 줄을 제목, 나머지를 본문으로
+        print(f"JSON 파싱 실패: {e}", file=sys.stderr, flush=True)
         lines = text.split("\n")
         title = lines[0].lstrip("#").strip() if lines else "새 포스트"
         body = "\n".join(lines[1:]).strip() if len(lines) > 1 else text
         return title, f"<p>{body}</p>"
 
 
+def diagnose_wordpress(domain, token):
+    log(f"[진단] REST API 접근 확인: https://{domain}/wp-json/wp/v2/posts")
+    r = requests.get(
+        f"https://{domain}/wp-json/wp/v2/posts",
+        headers={"Authorization": f"Basic {token}"},
+        timeout=15,
+    )
+    log(f"[진단] GET 상태코드: {r.status_code}")
+    log(f"[진단] GET 응답: {r.text[:300]}")
+
+    log(f"[진단] 인증 확인: https://{domain}/wp-json/wp/v2/users/me")
+    r2 = requests.get(
+        f"https://{domain}/wp-json/wp/v2/users/me",
+        headers={"Authorization": f"Basic {token}"},
+        timeout=15,
+    )
+    log(f"[진단] 인증 상태코드: {r2.status_code}")
+    log(f"[진단] 인증 응답: {r2.text[:300]}")
+
+
 def post_to_wordpress(title, content):
-    domain = os.environ.get("WP_DOMAIN", "raonlog.com")
+    domain = os.environ.get("WP_DOMAIN", "www.raonlog.com")
     username = os.environ["WP_USERNAME"]
     app_password = os.environ["WP_APP_PASSWORD"]
-
-    wp_url = f"https://{domain}/wp-json/wp/v2/posts"
 
     credentials = f"{username}:{app_password}"
     token = base64.b64encode(credentials.encode("utf-8")).decode("utf-8")
 
+    diagnose_wordpress(domain, token)
+
+    wp_url = f"https://{domain}/wp-json/wp/v2/posts"
     headers = {
         "Authorization": f"Basic {token}",
         "Content-Type": "application/json",
     }
-
     payload = {
         "title": title,
         "content": content,
         "status": "publish",
     }
 
+    log(f"[POST] {wp_url}")
     response = requests.post(wp_url, headers=headers, json=payload, timeout=30)
-    print(f"  HTTP 상태코드: {response.status_code}")
-    print(f"  응답 본문: {response.text[:500]}")
+    log(f"[POST] 상태코드: {response.status_code}")
+    log(f"[POST] 응답: {response.text[:500]}")
     response.raise_for_status()
     result = response.json()
 
-    print(f"포스트 게시 완료!")
-    print(f"  제목: {title}")
-    print(f"  URL : {result.get('link', 'N/A')}")
-    print(f"  ID  : {result.get('id', 'N/A')}")
+    log(f"포스트 게시 완료!")
+    log(f"  제목: {title}")
+    log(f"  URL : {result.get('link', 'N/A')}")
+    log(f"  ID  : {result.get('id', 'N/A')}")
     return result
 
 
 if __name__ == "__main__":
     topic = os.environ.get("BLOG_TOPIC", "").strip()
 
-    print("블로그 포스트 생성 중...")
+    log("블로그 포스트 생성 중...")
     title, content = generate_blog_post(topic if topic else None)
-    print(f"  생성된 제목: {title}")
+    log(f"  생성된 제목: {title}")
 
-    print("WordPress에 포스팅 중...")
+    log("WordPress에 포스팅 중...")
     post_to_wordpress(title, content)
